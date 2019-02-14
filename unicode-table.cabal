@@ -1,7 +1,7 @@
 name:                unicode-table
 version:             0.1.0.0
 synopsis:            Print text tables with unicode symbols for borders and edges
--- description:
+description:         See the README.md
 homepage:            https://github.com/tkemps/unicode-table.git
 license:             BSD3
 license-file:        LICENSE
