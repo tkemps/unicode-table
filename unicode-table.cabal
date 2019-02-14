@@ -1,0 +1,21 @@
+name:                unicode-table
+version:             0.1.0.0
+synopsis:            Print text tables with unicode symbols for borders and edges
+-- description:
+homepage:            https://github.com/tkemps/unicode-table.git
+license:             BSD3
+license-file:        LICENSE
+author:              Torsten Kemps-Benedix
+maintainer:          tkx68@icloud.com
+copyright:           2019 Torsten Kemps-Benedix
+category:            Text
+build-type:          Simple
+cabal-version:       >=1.10
+extra-source-files:  README.md
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Text.UnicodeTable
+  default-language:    Haskell2010
+  other-extensions:    OverloadedStrings, RecordWildCards
+  build-depends:       base >= 4.7 && < 5, array, formatting, text
