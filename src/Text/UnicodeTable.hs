@@ -1,5 +1,53 @@
 {-# LANGUAGE NoImplicitPrelude, OverloadedStrings, RecordWildCards #-}
-module Text.UnicodeTable (Table(..), LineType(..), fromTable) where
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  Text.UniocdeTable
+-- Copyright   :  (C) 2019 Torsten Kemps-Benedix
+-- License     :  BSD-style (see the file LICENSE)
+-- Maintainer  :  Torsten Kemps-Benedix (tkx68@icloud.com)
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- This package allows you to print simple text tables with suitable unicode characters for borders and edges.
+--
+-- @example
+--
+-- @
+-- {-\# LANGUAGE OverloadedStrings, FlexibleContexts \#-}
+-- module Main where
+--'
+-- import Data.Array.IArray
+-- import Data.Text.Lazy.Builder
+-- import Text.UnicodeTable
+--'
+-- main = do
+--     let content = array ((0,0),(5,5)) [((r,c), fromString . show $ (r,c)) | r <- [0..5], c <- [0..5]]
+--     let ws = listArray (0,5) (replicate 6 20)
+--     let hs = listArray (0,6) (replicate 7 SingleLine)
+--     let vs = listArray (0,6) (replicate 7 SingleLine)
+--     let tbl = mkTable content ws hs vs
+--     print tbl
+-- @
+--
+-- This gives the following output:
+--
+-- @
+-- ┌────────────────────┬────────────────────┬────────────────────┬────────────────────┬────────────────────┬────────────────────┐
+-- │               (0,0)│               (0,1)│               (0,2)│               (0,3)│               (0,4)│               (0,5)│
+-- ├────────────────────┼────────────────────┼────────────────────┼────────────────────┼────────────────────┼────────────────────┤
+-- │               (1,0)│               (1,1)│               (1,2)│               (1,3)│               (1,4)│               (1,5)│
+-- ├────────────────────┼────────────────────┼────────────────────┼────────────────────┼────────────────────┼────────────────────┤
+-- │               (2,0)│               (2,1)│               (2,2)│               (2,3)│               (2,4)│               (2,5)│
+-- ├────────────────────┼────────────────────┼────────────────────┼────────────────────┼────────────────────┼────────────────────┤
+-- │               (3,0)│               (3,1)│               (3,2)│               (3,3)│               (3,4)│               (3,5)│
+-- ├────────────────────┼────────────────────┼────────────────────┼────────────────────┼────────────────────┼────────────────────┤
+-- │               (4,0)│               (4,1)│               (4,2)│               (4,3)│               (4,4)│               (4,5)│
+-- ├────────────────────┼────────────────────┼────────────────────┼────────────────────┼────────────────────┼────────────────────┤
+-- │               (5,0)│               (5,1)│               (5,2)│               (5,3)│               (5,4)│               (5,5)│
+-- └────────────────────┴────────────────────┴────────────────────┴────────────────────┴────────────────────┴────────────────────┘
+-- @
+----------------------------------------------------------------------------
+module Text.UnicodeTable (mkTable, Table(..), LineType(..), fromTable) where
 
 import           Prelude                     hiding (Left, Right)
 import           Data.Array.IArray           (Array)
@@ -16,6 +64,31 @@ data Table = Table {
     columnWidth :: Array Int Int,
     hLines :: Array Int LineType,
     vLines :: Array Int LineType}
+
+-- |The 'mkTable' function safely constructs a table and checks the correctness of all dimensions.
+--  All lower bounds must be 0. The number of 'columnWidths' must be euqal to the number of columns
+--  in the 'content'. The 'hLines' and 'vLines' must contain one element more than the rows resp.
+--  columns of the 'content'.
+mkTable ::
+    Array (Int, Int) TB.Builder -- ^ The first argument 'content' is a two dimensional 'Array' of 'Data.Text.Lazy.Builder.Builder's and specifies what shall go into the cells of the table.
+    -> Array Int Int -- ^ The second argument 'columnWidth' specifies the widths of the columns as the number of characters they may contain.
+    -> Array Int LineType -- ^ The third argument 'hLines' specifies the 'LineType's of the horizontal lines.
+    -> Array Int LineType -- ^ The fourth argument 'vLines' specifies the 'LineType's of the vertical lines.
+    -> Table
+mkTable content columnWidths hLines vLines =
+    let ((n0,n1),(m0,m1)) = A.bounds content
+        (nW0,nW1) = A.bounds columnWidths
+        (nH0,nH1) = A.bounds hLines
+        (nV0,nV1) = A.bounds vLines
+    in if n0/=0 || m0/=0 || nW0/=0 || nH0/=0 || nV0/=0
+            then error "All lower bounds shall be 0!"
+            else if m1/=nW1
+                then error "Number of column widths must be equal to number of columns of content!"
+                else if m1/=nV1+1
+                    then error "Number of columns of content must be one less than number of vLines!"
+                    else if n1/=nH1+1
+                    then error "Number of rows of content must be one less than number of hLines!"
+                    else Table content columnWidths hLines vLines
 
 data LineDirection = Vertical | Horizontal | Cross | VerticalAndLeft |
                      VerticalAndRight | HorizontalAndDown | HorizontalAndUp deriving Show
@@ -74,6 +147,10 @@ edge SingleLine SingleLine Top = '┬'
 edge SingleLine SingleLine TopLeft = '┌'
 edge SingleLine SingleLine TopRight = '┐'
 
+-- |The 'fromTable' function constructs a 'Data.Text.Lazy.Builder.Builder' from the 'content' and the
+-- other parts of the table specification. You can further convert this
+-- 'Data.Text.Lazy.Builder.Builder' to 'Data.Text.Lazy.Text' with
+-- 'Data.Text.Lazy.Builder.toLazyText'. You may also simply 'show' a 'Table' and get it as a 'String'.
 fromTable :: Table -> TB.Builder
 fromTable Table{..} =
     let as :: [((Int, Int), TB.Builder)]

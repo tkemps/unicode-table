@@ -15,7 +15,7 @@ main = do
     let ws = listArray (0,5) (replicate 6 20)
     let hs = listArray (0,6) (replicate 7 SingleLine)
     let vs = listArray (0,6) (replicate 7 SingleLine)
-    let tbl = Table content ws hs vs
+    let tbl = mkTable content ws hs vs
     print tbl
 ```
 
