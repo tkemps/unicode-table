@@ -76,7 +76,7 @@ mkTable ::
     -> Array Int LineType -- ^ The fourth argument 'vLines' specifies the 'LineType's of the vertical lines.
     -> Table
 mkTable content columnWidths hLines vLines =
-    let ((n0,n1),(m0,m1)) = A.bounds content
+    let ((n0,m0),(n1,m1)) = A.bounds content
         (nW0,nW1) = A.bounds columnWidths
         (nH0,nH1) = A.bounds hLines
         (nV0,nV1) = A.bounds vLines
@@ -84,9 +84,9 @@ mkTable content columnWidths hLines vLines =
             then error "All lower bounds shall be 0!"
             else if m1/=nW1
                 then error "Number of column widths must be equal to number of columns of content!"
-                else if m1/=nV1+1
+                else if m1+1/=nV1
                     then error "Number of columns of content must be one less than number of vLines!"
-                    else if n1/=nH1+1
+                    else if n1+1/=nH1
                     then error "Number of rows of content must be one less than number of hLines!"
                     else Table content columnWidths hLines vLines
 
